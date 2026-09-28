@@ -1,0 +1,25 @@
+<?php
+header("Content-Type: application/json");
+require_once "db.php";
+$data = [];
+$r = $conn->query("SELECT COUNT(*) AS n FROM prestamo WHERE estado='activo'");
+$data['activos'] = $r->fetch_assoc()['n'];
+$r = $conn->query("SELECT COUNT(*) AS n FROM prestamo WHERE estado='vencido'");
+$data['vencidos'] = $r->fetch_assoc()['n'];
+$r = $conn->query("SELECT COUNT(*) AS n FROM objeto WHERE estado='disponible'");
+$data['disponibles'] = $r->fetch_assoc()['n'];
+$r = $conn->query("SELECT COUNT(*) AS n FROM objeto");
+$data['total_objetos'] = $r->fetch_assoc()['n'];
+$r = $conn->query("SELECT COUNT(*) AS n FROM prestamo WHERE estado='devuelto' AND DATE(fecha_devolucion_real)=CURDATE()");
+$data['devueltos_hoy'] = $r->fetch_assoc()['n'];
+$r = $conn->query("SELECT p.id_prestamo, CONCAT(u.nombre,' ',u.apellido) AS usuario, o.nombre AS objeto, p.fecha_devolucion_esperada, p.estado FROM prestamo p JOIN usuario u ON u.id_usuario=p.id_usuario JOIN objeto o ON o.id_objeto=p.id_objeto WHERE p.estado IN ('activo','vencido') ORDER BY p.estado DESC, p.fecha_devolucion_esperada ASC");
+$data['prestamos_recientes'] = [];
+while ($row = $r->fetch_assoc()) $data['prestamos_recientes'][] = $row;
+$r = $conn->query("SELECT c.nombre, COUNT(o.id_objeto) AS total, SUM(o.estado='disponible') AS disponibles, SUM(o.estado='prestado') AS prestados FROM categoria c LEFT JOIN objeto o ON o.id_categoria=c.id_categoria GROUP BY c.id_categoria, c.nombre");
+$data['inventario_categorias'] = [];
+while ($row = $r->fetch_assoc()) $data['inventario_categorias'][] = $row;
+$r = $conn->query("SELECT CONCAT(u.nombre,' ',u.apellido) AS usuario, o.nombre AS objeto, fn_dias_retraso(p.id_prestamo) AS dias_retraso FROM prestamo p JOIN usuario u ON u.id_usuario=p.id_usuario JOIN objeto o ON o.id_objeto=p.id_objeto WHERE p.estado='vencido' ORDER BY dias_retraso DESC");
+$data['vencidos_detalle'] = [];
+while ($row = $r->fetch_assoc()) $data['vencidos_detalle'][] = $row;
+echo json_encode($data);
+$conn->close();
