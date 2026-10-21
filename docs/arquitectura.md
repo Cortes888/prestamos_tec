@@ -17,4 +17,4 @@ Cada fila corresponde a una caja del [diagrama de componentes](diagramas/03_comp
 | Conexión | Abrir la única conexión a la base de datos. | Base de datos | src/Config/Conexion.php |
 | Archivos sin migrar (pendientes para la semana 15) | Dashboard, usuarios, notificaciones, categorías, facultades y crear o eliminar objetos y usuarios. Cada archivo sigue haciendo todo. | db.php, Base de datos | src/dashboard.php, src/usuarios.php, src/notificaciones.php, src/marcar_enviada.php, src/categorias.php, src/facultades.php, src/crear_objeto.php, src/eliminar_objeto.php, src/crear_usuario.php, src/eliminar_usuario.php, src/db.php |
 | Interfaz web | Mostrar las pantallas y llamar al backend. | Controladores y archivos sin migrar (por HTTP) | index.html |
-| Base de datos | Guardar la información e impedir datos inválidos: llaves foráneas, estados permitidos y un solo préstamo abierto por equipo. | Ninguna | resources/database/BDSQL V3.sql |
+| Base de datos | Guardar la información e impedir datos inválidos: llaves foráneas, estados permitidos y un solo préstamo abierto por equipo. | Ninguna | resources/database/BDSQL V3.sql|
