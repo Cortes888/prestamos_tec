@@ -1,15 +1,23 @@
 <?php
-header("Content-Type: application/json");
-require_once "db.php";
-$body = json_decode(file_get_contents("php://input"), true);
-$id_prestamo = intval($body['id_prestamo'] ?? 0);
-$obs = $conn->real_escape_string($body['obs'] ?? 'Sin novedades');
-if (!$id_prestamo) { echo json_encode(["error" => "Falta id_prestamo"]); exit; }
-$stmt = $conn->prepare("CALL sp_registrar_devolucion(?, ?, @msg)");
-$stmt->bind_param("is", $id_prestamo, $obs);
-$stmt->execute();
-$stmt->close();
-$r = $conn->query("SELECT @msg AS mensaje");
-$row = $r->fetch_assoc();
-echo json_encode(["mensaje" => $row['mensaje']]);
-$conn->close();
+/**
+ * POST src/devolver.php
+ * Body: { id_prestamo, obs }
+ *
+ * Antes: CALL sp_registrar_devolucion, que respondía 'OK' aunque no
+ *        modificara ninguna fila (préstamo inexistente o ya devuelto).
+ * Ahora: PrestamoServicio::devolver() verifica el préstamo y el cambio (ADR-004).
+ */
+declare(strict_types=1);
+require_once __DIR__ . '/bootstrap.php';
+
+use PrestamosTec\Compartido\Contenedor;
+use PrestamosTec\Compartido\Http\RespuestaJson;
+
+RespuestaJson::manejar(function (): array {
+    $cuerpo = RespuestaJson::cuerpo();
+    $idPrestamo = (int) ($cuerpo['id_prestamo'] ?? 0);
+    $obs = trim((string) ($cuerpo['obs'] ?? '')) ?: 'Sin novedades';
+
+    Contenedor::prestamos()->devolver($idPrestamo, $obs);
+    return ['mensaje' => "OK: Devolución del préstamo #{$idPrestamo} registrada."];
+});
