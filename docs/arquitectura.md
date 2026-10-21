@@ -1,6 +1,5 @@
 # Componentes y responsabilidades
 
-Cada fila corresponde a una caja del [diagrama de componentes](diagramas/03_componentes_inventario.png). Las cuatro primeras forman el módulo de Inventario (MVP).
 
 | Componente | Responsabilidad | Dependencias | Archivo o paquete actual |
 |---|---|---|---|
