@@ -54,5 +54,3 @@ Para resolverlos separamos el backend en capas (controladores, servicios y repos
 3. En MySQL Workbench, abrir y ejecutar [`resources/database/BDSQL V3.sql`](resources/database/BDSQL%20V3.sql). Este script borra la base `prestamos_tec` si existe y la crea de nuevo.
 4. Abrir en el navegador http://localhost/prestamos/
 5. Para probar: crear un usuario y un equipo, y luego registrar un préstamo y su devolución.
-
-La conexión usa los valores por defecto de XAMPP: usuario `root`, sin contraseña, base `prestamos_tec`.
