@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: Préstamos TEC - API REST del MVP
+  version: 1.0.0
+  description: |
+    API del módulo de Inventario (MVP) y de Préstamos.
+    Cuando algo falla, la respuesta trae un código HTTP de error y un JSON de la forma {"error": "..."}.
+servers:
+  - url: /prestamos/api
+    description: XAMPP local (http://localhost/prestamos/api)
+tags:
+  - name: Inventario
+    description: Equipos y su estado (módulo MVP)
+  - name: Préstamos
+    description: Registro de préstamos y devoluciones
+
+paths:
+  /objetos:
+    get:
+      tags: [Inventario]
+      summary: Lista el inventario
+      description: Sin los equipos dados de baja. Con estado=disponible devuelve solo los que se pueden prestar.
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema: { type: string, enum: [disponible] }
+      responses:
+        '200':
+          description: Lista de equipos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Objeto' }
+        '422': { $ref: '#/components/responses/DatosInvalidos' }
+
+  /objetos/{id}/estado:
+    patch:
+      tags: [Inventario]
+      summary: Cambia el estado de un equipo
+      description: Solo mantenimiento, baja o disponible. El estado prestado solo cambia al registrar o devolver un préstamo.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [estado]
+              properties:
+                estado: { type: string, enum: [disponible, mantenimiento, baja] }
+            example: { estado: mantenimiento }
+      responses:
+        '200':
+          description: Estado cambiado
+          content:
+            application/json:
+              example:
+                mensaje: 'OK: Equipo #2 ahora está en estado mantenimiento.'
+                id_objeto: 2
+                estado_anterior: disponible
+                estado: mantenimiento
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '422': { $ref: '#/components/responses/DatosInvalidos' }
+
+  /prestamos:
+    get:
+      tags: [Préstamos]
+      summary: Lista los préstamos
+      responses:
+        '200':
+          description: Lista de préstamos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Prestamo' }
+    post:
+      tags: [Préstamos]
+      summary: Registra un préstamo
+      description: Bloquea el equipo mientras registra el préstamo, para que dos solicitudes al mismo tiempo no lo presten dos veces.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_usuario, id_objeto]
+              properties:
+                id_usuario: { type: integer }
+                id_objeto: { type: integer }
+                dias: { type: integer, minimum: 1, maximum: 30, default: 3 }
+                obs: { type: string }
+            example: { id_usuario: 1, id_objeto: 1, dias: 3, obs: Clase de redes }
+      responses:
+        '201':
+          description: Préstamo registrado
+          content:
+            application/json:
+              example: { mensaje: 'OK: Préstamo #1 registrado.', id_prestamo: 1 }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '422': { $ref: '#/components/responses/DatosInvalidos' }
+
+  /prestamos/{id}/devolucion:
+    post:
+      tags: [Préstamos]
+      summary: Registra la devolución de un préstamo
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                obs: { type: string }
+            example: { obs: Llegó bien }
+      responses:
+        '200':
+          description: Devolución registrada y equipo disponible
+          content:
+            application/json:
+              example: { mensaje: 'OK: Devolución del préstamo #1 registrada.', id_prestamo: 1 }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    Objeto:
+      type: object
+      properties:
+        id_objeto: { type: integer, example: 1 }
+        nombre: { type: string, example: Portátil Lenovo }
+        codigo_inv: { type: string, example: POR-001 }
+        estado: { type: string, enum: [disponible, prestado, mantenimiento, baja] }
+        descripcion: { type: string, example: ThinkPad }
+        categoria: { type: string, example: Portátiles }
+        total_prestamos: { type: integer, example: 0 }
+    Prestamo:
+      type: object
+      properties:
+        id_prestamo: { type: integer, example: 1 }
+        usuario: { type: string, example: Ana Ruiz }
+        objeto: { type: string, example: Portátil Lenovo }
+        fecha_prestamo: { type: string, example: '2026-10-29 17:51:21' }
+        fecha_devolucion_esperada: { type: string, example: '2026-11-01 17:51:21' }
+        fecha_devolucion_real: { type: string, nullable: true, example: null }
+        estado: { type: string, enum: [activo, devuelto, vencido, perdido] }
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+  responses:
+    NoEncontrado:
+      description: El equipo, el usuario o el préstamo no existe
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: 'El préstamo #9999 no existe.' }
+    Conflicto:
+      description: La operación choca con el estado actual
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: 'El equipo "Portátil Lenovo" no está disponible (estado actual: prestado).' }
+    DatosInvalidos:
+      description: Faltan datos o no son válidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: 'Los días de préstamo deben estar entre 1 y 30.' }
