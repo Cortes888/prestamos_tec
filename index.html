@@ -97,6 +97,7 @@
   .form-input{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13.5px;font-family:'DM Sans',sans-serif;transition:border-color .15s;outline:none;}
   .form-input:focus{border-color:var(--accent);}
   select.form-input{cursor:pointer;}
+  .sel-estado{padding:4px 6px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
 
@@ -295,7 +296,7 @@
           Nuevo
         </button>
       </div>
-      <!-- Tabla cargada desde src/prestamos.php -->
+      <!-- Tabla cargada desde la API: GET api/prestamos -->
       <div class="card">
         <div class="card-header">
           <span class="card-title">Todos los préstamos</span>
@@ -322,7 +323,7 @@
           Nuevo objeto
         </button>
       </div>
-      <!-- Tabla cargada desde src/objetos.php -->
+      <!-- Tabla cargada desde la API: GET api/objetos -->
       <div class="card">
         <div class="card-header">
           <span class="card-title">Inventario de objetos</span>
@@ -503,7 +504,7 @@
 
 <!-- ═══════════ MODALES ═══════════ -->
 
-<!-- MODAL: Nuevo préstamo → llama a src/registrar_prestamo.php (POST JSON) -->
+<!-- MODAL: Nuevo préstamo → llama a la API: POST api/prestamos (JSON) -->
 <div class="modal-overlay" id="modal-prestamo">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-prestamo')">×</button>
@@ -518,7 +519,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Objeto (solo disponibles)</label>
-        <!-- Cargado desde src/objetos_disponibles.php → { id_objeto, nombre, codigo_inv } -->
+        <!-- Cargado desde la API: GET api/objetos?estado=disponible → { id_objeto, nombre, codigo_inv } -->
         <select class="form-input" id="sel-objeto">
           <option value="">Cargando...</option>
         </select>
@@ -615,18 +616,21 @@
 <div class="toast" id="toast"></div>
 
 <!-- ═══════════ JAVASCRIPT ═══════════
-  RESUMEN DE ENDPOINTS PHP NECESARIOS:
+  API REST DEL MVP (src/api.php, ver README):
+  GET   api/objetos                     → inventario con categoría y total_prestamos
+  GET   api/objetos?estado=disponible   → solo equipos disponibles
+  PATCH api/objetos/{id}/estado         → body: { estado }  (mantenimiento, baja o disponible)
+  GET   api/prestamos                   → préstamos con usuario y equipo
+  POST  api/prestamos                   → body: { id_usuario, id_objeto, dias, obs }  (201)
+  POST  api/prestamos/{id}/devolucion   → body: { obs }
+  Errores: HTTP 4xx con { error } (404 no existe · 405 método · 409 conflicto · 422 datos inválidos)
+
+  ARCHIVOS SIN MIGRAR (se llaman directamente):
   GET  src/dashboard.php            → stats, préstamos recientes, categorías, vencidos
-  GET  src/prestamos.php            → todos los préstamos con JOIN usuario+objeto
-  GET  src/objetos.php              → inventario completo con categoría y total_prestamos
   GET  src/usuarios.php             → usuarios activos con facultad y fn_total_prestamos_activos
   GET  src/notificaciones.php       → cola de notificaciones con usuario+objeto
-  GET  src/objetos_disponibles.php  → solo objetos con estado='disponible'
   GET  src/categorias.php           → lista de categorías
   GET  src/facultades.php           → lista de facultades
-  POST src/registrar_prestamo.php   → body: { id_usuario, id_objeto, dias, obs } → PrestamoServicio::registrar (ADR-003)
-  POST src/devolver.php             → body: { id_prestamo, obs }                 → PrestamoServicio::devolver (ADR-004)
-  Errores: HTTP 4xx con { error } (404 no existe · 409 conflicto · 422 datos inválidos)
   POST src/crear_objeto.php         → body: { nombre, codigo_inv, id_categoria, descripcion }
   POST src/crear_usuario.php        → body: { nombre, apellido, correo, codigo_univ, tipo, id_facultad }
   POST src/marcar_enviada.php       → body: { all: true } o { id_notificacion: N }
@@ -670,7 +674,7 @@ function openModal(id) {
   if (id === 'modal-prestamo') {
     cargarSelect('sel-usuario', 'src/usuarios.php',
       u => ({ value: u.id_usuario, label: `${u.nombre} ${u.apellido} – ${u.codigo_univ}` }));
-    cargarSelect('sel-objeto', 'src/objetos_disponibles.php',
+    cargarSelect('sel-objeto', 'api/objetos?estado=disponible',
       o => ({ value: o.id_objeto, label: `${o.nombre} – ${o.codigo_inv}` }),
       'Sin objetos disponibles');
   }
@@ -776,7 +780,7 @@ function cargarDashboard() {
 // Espera JSON: [{ id_prestamo, usuario, objeto, fecha_prestamo,
 //                fecha_devolucion_esperada, fecha_devolucion_real, estado }]
 function cargarPrestamos() {
-  fetch('src/prestamos.php')
+  fetch('api/prestamos')
     .then(r => r.json())
     .then(rows => {
       document.getElementById('prest-count').textContent = rows.length + ' registros';
@@ -814,7 +818,7 @@ function cargarPrestamos() {
 // ── INVENTARIO ───────────────────────────────────────────────────────────────
 // ── INVENTARIO ───────────────────────────────────────────────────────────────
 function cargarInventario() {
-  fetch('src/objetos.php')
+  fetch('api/objetos')
     .then(r => r.json())
     .then(rows => {
       document.getElementById('inv-count').textContent = rows.length + ' objetos';
@@ -833,6 +837,11 @@ function cargarInventario() {
         <td><span class="badge ${badgeEstado(o.estado)}">${o.estado}</span></td>
         <td>${o.total_prestamos}</td>
         <td><div class="btn-row">
+          ${o.estado !== 'prestado' ? `<select class="sel-estado" title="Cambiar estado" onchange="cambiarEstado(${o.id_objeto}, this)">
+            <option value="">Estado...</option>
+            ${['disponible', 'mantenimiento', 'baja'].filter(e => e !== o.estado)
+              .map(e => `<option value="${e}">${e === 'baja' ? 'Dar de baja' : e.charAt(0).toUpperCase() + e.slice(1)}</option>`).join('')}
+          </select>` : ''}
           <button class="btn-icon" onclick="eliminar(this, 'objeto', ${o.id_objeto})" title="Eliminar Objeto">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
           </button>
@@ -904,16 +913,17 @@ function cargarNotificaciones() {
 
 // ── ACCIONES ─────────────────────────────────────────────────────────────────
 
-// Registrar préstamo → POST src/registrar_prestamo.php
+// Registrar préstamo → POST api/prestamos
 // Body: { id_usuario, id_objeto, dias, obs }
-// Respuesta esperada: { mensaje: "OK: Préstamo #N registrado.", id_prestamo: N }
+// Respuesta 201: { mensaje: "OK: Préstamo #N registrado.", id_prestamo: N }
+// Si falla: 404, 409 o 422 con { error }
 function crearPrestamo() {
   const id_usuario = document.getElementById('sel-usuario').value;
   const id_objeto  = document.getElementById('sel-objeto').value;
   const dias       = document.getElementById('inp-dias').value;
   const obs        = document.getElementById('inp-obs').value;
   if (!id_usuario || !id_objeto) { toast('Selecciona usuario y objeto', 'error'); return; }
-  fetch('src/registrar_prestamo.php', {
+  fetch('api/prestamos', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id_usuario, id_objeto, dias, obs })
@@ -928,14 +938,37 @@ function crearPrestamo() {
   .catch(() => toast('Error al registrar préstamo', 'error'));
 }
 
-// Registrar devolución → POST src/devolver.php
-// Body: { id_prestamo, obs }
-// Respuesta esperada: { mensaje: "OK: Devolución del préstamo #N registrada." }
+// Cambiar estado de un equipo → PATCH api/objetos/{id}/estado
+// Body: { estado }  (mantenimiento, baja o disponible)
+// Respuesta 200: { mensaje, id_objeto, estado_anterior, estado }
+// Si falla: 404, 409 (cambio no permitido) o 422 con { error }
+function cambiarEstado(id, sel) {
+  const estado = sel.value;
+  if (!estado) return;
+  sel.disabled = true;
+  fetch(`api/objetos/${id}/estado`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ estado })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.error) { toast(res.error, 'error'); sel.value = ''; sel.disabled = false; return; }
+    toast(res.mensaje || 'Estado actualizado.');
+    cargarInventario(); cargarDashboard();
+  })
+  .catch(() => { toast('Error al cambiar el estado', 'error'); sel.disabled = false; });
+}
+
+// Registrar devolución → POST api/prestamos/{id}/devolucion
+// Body: { obs }
+// Respuesta 200: { mensaje: "OK: Devolución del préstamo #N registrada.", id_prestamo: N }
+// Si falla: 404 o 409 con { error }
 function devolver(id) {
-  fetch('src/devolver.php', {
+  fetch(`api/prestamos/${id}/devolucion`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id_prestamo: id, obs: 'Sin novedades' })
+    body: JSON.stringify({ obs: 'Sin novedades' })
   })
   .then(r => r.json())
   .then(res => {
