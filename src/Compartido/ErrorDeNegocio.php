@@ -13,6 +13,7 @@ use RuntimeException;
 class ErrorDeNegocio extends RuntimeException
 {
     public const NO_ENCONTRADO = 404;
+    public const METODO_NO_PERMITIDO = 405;
     public const CONFLICTO = 409;
     public const DATOS_INVALIDOS = 422;
 

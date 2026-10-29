@@ -1,0 +1,6 @@
+# API REST del MVP (ADR-005)
+# Todo lo que empiece por api/ lo atiende src/api.php.
+# Ejemplo: http://localhost/prestamos/api/objetos  ->  src/api.php
+# En XAMPP mod_rewrite ya viene activo.
+RewriteEngine On
+RewriteRule ^api(/.*)?$ src/api.php [QSA,L]
