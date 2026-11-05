@@ -6,7 +6,7 @@ Sistema para la digitalización y administración del préstamo de apoyo tecnol�
 ## Integrantes
 - Santiago Cortes (backend, API REST y repositorio)
 - Juan David Ospina
-- Samuel Silva
+- Samuel Silva (pruebas y evidencias)
 
 ## Docente
 - Fernando Higuita Bentancur
