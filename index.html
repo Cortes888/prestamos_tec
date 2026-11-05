@@ -390,7 +390,7 @@
       </div>
 
       <div id="tab-triggers" class="tab-content active">
-        <div class="card"><div class="card-header"><span class="card-title">Trigger 1 – Al crear préstamo: cambiar objeto a 'prestado' · RETIRADO en BDSQL V3 (ADR-002: ahora lo hace InventarioServicio)</span></div>
+        <div class="card"><div class="card-header"><span class="card-title">Trigger 1 – Al crear préstamo: cambiar objeto a 'prestado' (ya no se usa desde BDSQL V3)</span></div>
         <div class="card-body"><div class="sql-block"><span class="sql-kw">CREATE TRIGGER</span> trg_prestamo_insert
 <span class="sql-kw">AFTER INSERT ON</span> prestamo <span class="sql-kw">FOR EACH ROW BEGIN</span>
   <span class="sql-kw">IF</span> NEW.estado = <span class="sql-str">'activo'</span> <span class="sql-kw">THEN</span>
@@ -399,7 +399,7 @@
   <span class="sql-kw">END IF</span>;
 <span class="sql-kw">END</span></div></div></div>
 
-        <div class="card"><div class="card-header"><span class="card-title">Trigger 2 – Al devolver: libera objeto + genera notificación si vence · RETIRADO en BDSQL V3 (ADR-002/ADR-004)</span></div>
+        <div class="card"><div class="card-header"><span class="card-title">Trigger 2 – Al devolver: libera objeto + genera notificación si vence (ya no se usa desde BDSQL V3)</span></div>
         <div class="card-body"><div class="sql-block"><span class="sql-kw">CREATE TRIGGER</span> trg_prestamo_devolucion
 <span class="sql-kw">AFTER UPDATE ON</span> prestamo <span class="sql-kw">FOR EACH ROW BEGIN</span>
   <span class="sql-cm">-- Si cambió a devuelto → liberar objeto</span>
@@ -427,10 +427,10 @@
       </div>
 
       <div id="tab-procs" class="tab-content">
-        <div class="card"><div class="card-header"><span class="card-title">sp_registrar_prestamo – Nuevo préstamo con validación · RETIRADO en V3 (ADR-003: PrestamoServicio::registrar)</span></div>
+        <div class="card"><div class="card-header"><span class="card-title">sp_registrar_prestamo – Nuevo préstamo con validación (ya no se usa desde BDSQL V3)</span></div>
         <div class="card-body"><div class="sql-block"><span class="sql-kw">CALL</span> <span class="sql-fn">sp_registrar_prestamo</span>(p_id_usuario, p_id_objeto, p_dias, p_obs, @id_prestamo, @mensaje);</div></div></div>
 
-        <div class="card"><div class="card-header"><span class="card-title">sp_registrar_devolucion – Registrar devolución · RETIRADO en V3 (ADR-004: PrestamoServicio::devolver)</span></div>
+        <div class="card"><div class="card-header"><span class="card-title">sp_registrar_devolucion – Registrar devolución (ya no se usa desde BDSQL V3)</span></div>
         <div class="card-body"><div class="sql-block"><span class="sql-kw">CALL</span> <span class="sql-fn">sp_registrar_devolucion</span>(p_id_prestamo, p_obs, @mensaje);</div></div></div>
 
         <div class="card"><div class="card-header"><span class="card-title">sp_marcar_vencidos – Evento: marca vencidos cada hora</span></div>

@@ -83,10 +83,10 @@ final class MySqlPrestamoRepositorio implements PrestamoRepositorio
             "UPDATE prestamo
                 SET estado = 'devuelto',
                     fecha_devolucion_real = NOW(),
-                    observaciones = CONCAT(IFNULL(observaciones, ''), ' | Devolución: ', :obs)
+                    observaciones = IF(IFNULL(observaciones, '') = '', CONCAT('Devolución: ', :obs), CONCAT(observaciones, ' | Devolución: ', :obs2))
               WHERE id_prestamo = :id AND estado <> 'devuelto'"
         );
-        $stmt->execute(['obs' => $observaciones, 'id' => $idPrestamo]);
+        $stmt->execute(['obs' => $observaciones, 'obs2' => $observaciones, 'id' => $idPrestamo]);
         return $stmt->rowCount();
     }
 }

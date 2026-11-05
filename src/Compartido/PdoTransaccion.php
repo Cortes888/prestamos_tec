@@ -9,7 +9,7 @@ use Throwable;
 
 final class PdoTransaccion implements Transaccion
 {
-// Errores de MySQL cuando dos operaciones chocan. Se responden como 409
+    // Errores de MySQL cuando dos operaciones chocan. Se responden como 409
     private const ERRORES_DE_CONCURRENCIA = [
         1213, // deadlock
         1205, // tiempo de espera del bloqueo

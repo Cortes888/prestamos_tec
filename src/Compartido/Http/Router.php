@@ -16,7 +16,6 @@ final class Router
         $regex = '#^' . preg_replace('#\{[a-z_]+\}#', '(\d+)', $patron) . '$#';
         $this->rutas[] = [
             'metodo' => strtoupper($metodo),
-            'patron' => $patron,
             'regex' => $regex,
             'accion' => $accion,
             'codigo' => $codigoExito,
