@@ -5,14 +5,11 @@ namespace PrestamosTec\Compartido;
 
 use RuntimeException;
 
-/**
- * Error esperado de una regla de negocio (objeto no disponible, préstamo
- * inexistente, etc.). Lleva el código HTTP con el que se debe responder,
- * para que los controladores no tengan que decidirlo.
- */
+// Error de una regla del negocio. Guarda el código HTTP que se va a responder
 class ErrorDeNegocio extends RuntimeException
 {
     public const NO_ENCONTRADO = 404;
+    public const METODO_NO_PERMITIDO = 405;
     public const CONFLICTO = 409;
     public const DATOS_INVALIDOS = 422;
 

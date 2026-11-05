@@ -9,15 +9,13 @@ use PrestamosTec\Inventario\Servicio\InventarioServicio;
 use PrestamosTec\Prestamos\Repositorio\MySqlPrestamoRepositorio;
 use PrestamosTec\Prestamos\Servicio\PrestamoServicio;
 
-/**
- * Arma los servicios con sus dependencias reales (MySQL).
- * Las pruebas arman los mismos servicios con dobles en memoria.
- */
+// Crea los servicios que usan los controladores
 final class Contenedor
 {
     public static function inventario(): InventarioServicio
     {
-        return new InventarioServicio(new MySqlObjetoRepositorio(Conexion::obtener()));
+        $pdo = Conexion::obtener();
+        return new InventarioServicio(new MySqlObjetoRepositorio($pdo), new PdoTransaccion($pdo));
     }
 
     public static function prestamos(): PrestamoServicio

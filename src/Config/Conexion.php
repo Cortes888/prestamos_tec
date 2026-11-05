@@ -5,13 +5,7 @@ namespace PrestamosTec\Config;
 
 use PDO;
 
-/**
- * Única fábrica de conexiones de la nueva arquitectura.
- *
- * Reemplaza progresivamente a src/db.php (que sigue existiendo para los
- * endpoints que aún no se han migrado). Los valores por defecto son los
- * mismos de db.php; se pueden sobrescribir con variables de entorno.
- */
+// Conexión a la base con PDO. Usa los mismos datos de db.php
 final class Conexion
 {
     private static ?PDO $pdo = null;

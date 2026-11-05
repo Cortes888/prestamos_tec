@@ -9,7 +9,7 @@ use PrestamosTec\Compartido\ErrorDeNegocio;
 
 final class MySqlPrestamoRepositorio implements PrestamoRepositorio
 {
-    /** Código MySQL de clave duplicada (índice único violado). */
+    // Error de MySQL por clave duplicada
     private const ER_DUP_ENTRY = 1062;
 
     private PDO $pdo;

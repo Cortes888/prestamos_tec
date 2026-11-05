@@ -9,21 +9,11 @@ use PrestamosTec\Inventario\Servicio\InventarioServicio;
 use PrestamosTec\Prestamos\Repositorio\PrestamoRepositorio;
 use RuntimeException;
 
-/**
- * Casos de uso de préstamo y devolución.
- *
- * Reemplaza a sp_registrar_prestamo y sp_registrar_devolucion:
- *  - ADR-003: el préstamo se registra en una sola transacción con la fila del
- *    equipo bloqueada, de modo que dos solicitudes simultáneas no pueden
- *    aprobarse ambas.
- *  - ADR-004: la devolución verifica que el préstamo exista y siga abierto
- *    antes de responder; ya no hay "OK" falsos.
- *  - ADR-002: el estado del equipo lo cambia InventarioServicio, no un trigger.
- */
+// Registra préstamos (ADR-003) y devoluciones (ADR-004)
 final class PrestamoServicio
 {
     public const DIAS_MIN = 1;
-    /** Mismo límite que ya tenía el formulario de index.html (input max="30"). */
+    // Mismo límite del formulario
     public const DIAS_MAX = 30;
 
     private PrestamoRepositorio $prestamos;
@@ -45,7 +35,6 @@ final class PrestamoServicio
         return $this->prestamos->listarConDetalle();
     }
 
-    /** @return int id del préstamo creado */
     public function registrar(int $idUsuario, int $idObjeto, int $dias, string $observaciones = ''): int
     {
         if ($idUsuario <= 0 || $idObjeto <= 0) {
@@ -62,10 +51,9 @@ final class PrestamoServicio
         }
 
         return $this->transaccion->ejecutar(function () use ($idUsuario, $idObjeto, $dias, $observaciones): int {
-            // 1. Bloquea la fila del equipo y valida que esté disponible.
-            //    Una segunda solicitud simultánea queda esperando aquí.
+            // Bloquea el equipo y revisa que esté disponible
             $this->inventario->marcarComoPrestado($idObjeto);
-            // 2. Crea el préstamo. Si algo falla, la transacción deshace también el paso 1.
+            // Guarda el préstamo
             return $this->prestamos->crear($idUsuario, $idObjeto, $dias, $observaciones);
         });
     }
@@ -87,7 +75,6 @@ final class PrestamoServicio
 
             $filas = $this->prestamos->marcarDevuelto($idPrestamo, $observaciones);
             if ($filas !== 1) {
-                // Con la fila bloqueada esto no debería pasar; si pasa, se deshace todo.
                 throw new RuntimeException("La devolución del préstamo #{$idPrestamo} no modificó el registro esperado.");
             }
 

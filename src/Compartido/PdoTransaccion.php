@@ -9,15 +9,11 @@ use Throwable;
 
 final class PdoTransaccion implements Transaccion
 {
-    /**
-     * Códigos de MySQL con los que la base aborta una transacción por
-     * chocar con otra simultánea. No son fallos del sistema: se informan como
-     * conflicto (HTTP 409) para que el usuario pueda reintentar.
-     */
+// Errores de MySQL cuando dos operaciones chocan. Se responden como 409
     private const ERRORES_DE_CONCURRENCIA = [
-        1213, // ER_LOCK_DEADLOCK
-        1205, // ER_LOCK_WAIT_TIMEOUT
-        1062, // ER_DUP_ENTRY (p. ej. índice uq_prestamo_abierto_por_objeto al confirmar)
+        1213, // deadlock
+        1205, // tiempo de espera del bloqueo
+        1062, // clave duplicada
     ];
 
     private PDO $pdo;
@@ -42,7 +38,6 @@ final class PdoTransaccion implements Transaccion
         }
     }
 
-    /** Convierte los errores de concurrencia de la base en ErrorDeNegocio 409. */
     public static function traducir(Throwable $e): Throwable
     {
         if ($e instanceof PDOException

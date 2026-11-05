@@ -1,11 +1,5 @@
 <?php
-/**
- * Punto de arranque de la nueva arquitectura por capas (Semana 13).
- *
- * Registra un autoloader sencillo: la clase PrestamosTec\Inventario\Servicio\InventarioServicio
- * se busca en src/Inventario/Servicio/InventarioServicio.php.
- * No requiere Composer, para que funcione igual en XAMPP.
- */
+// Carga automática de las clases de src/ (sin Composer)
 declare(strict_types=1);
 
 spl_autoload_register(function (string $clase): void {

@@ -3,17 +3,7 @@ declare(strict_types=1);
 
 namespace PrestamosTec\Inventario\Dominio;
 
-/**
- * Fuente única de verdad sobre los estados de un equipo (ADR-002).
- *
- * Antes, la regla "qué estado tiene un equipo y cuándo cambia" estaba repartida
- * entre el ENUM de la tabla objeto, la comparación con 'disponible' dentro de
- * sp_registrar_prestamo y los triggers de la tabla prestamo. Ahora vive aquí.
- *
- * Para agregar un estado nuevo (p. ej. 'reservado'): añadir la constante,
- * sus transiciones en TRANSICIONES y el valor al ENUM de la tabla objeto.
- * No hay que tocar el módulo de Préstamos.
- */
+// Estados de un equipo y a cuáles puede pasar desde cada uno (ADR-002)
 final class EstadoObjeto
 {
     public const DISPONIBLE = 'disponible';
@@ -21,7 +11,6 @@ final class EstadoObjeto
     public const MANTENIMIENTO = 'mantenimiento';
     public const BAJA = 'baja';
 
-    /** Estado actual => estados a los que puede pasar. */
     private const TRANSICIONES = [
         self::DISPONIBLE => [self::PRESTADO, self::MANTENIMIENTO, self::BAJA],
         self::PRESTADO => [self::DISPONIBLE],
@@ -29,7 +18,6 @@ final class EstadoObjeto
         self::BAJA => [],
     ];
 
-    /** @return string[] */
     public static function todos(): array
     {
         return array_keys(self::TRANSICIONES);

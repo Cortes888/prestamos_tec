@@ -6,13 +6,7 @@ namespace PrestamosTec\Compartido\Http;
 use PrestamosTec\Compartido\ErrorDeNegocio;
 use Throwable;
 
-/**
- * Utilidades de la capa de presentación (controladores = archivos *.php de src/).
- *
- * Contrato con el frontend (index.html):
- *   - éxito  → HTTP 200 con el JSON de datos (o { mensaje, ... })
- *   - fallo  → HTTP 4xx/5xx con { error: "..." }, que el frontend muestra como error.
- */
+// Responde en JSON. Si hay error devuelve {error} con el código HTTP
 final class RespuestaJson
 {
     public static function cuerpo(): array
@@ -21,16 +15,16 @@ final class RespuestaJson
         return is_array($datos) ? $datos : [];
     }
 
-    /** Ejecuta el controlador y traduce sus excepciones a respuestas JSON. */
-    public static function manejar(callable $controlador): void
+    public static function manejar(callable $controlador, int $codigoExito = 200): void
     {
         header('Content-Type: application/json; charset=utf-8');
         try {
             $resultado = $controlador();
-            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            http_response_code($codigoExito);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } catch (ErrorDeNegocio $e) {
             http_response_code($e->codigoHttp());
-            echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } catch (Throwable $e) {
             error_log('[prestamos_tec] ' . $e);
             http_response_code(500);

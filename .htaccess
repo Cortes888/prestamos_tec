@@ -1,0 +1,3 @@
+# Las rutas /api/... las atiende src/api.php
+RewriteEngine On
+RewriteRule ^api(/.*)?$ src/api.php [QSA,L]
