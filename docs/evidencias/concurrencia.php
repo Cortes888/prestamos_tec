@@ -5,13 +5,6 @@
  * Envía varias solicitudes de préstamo del MISMO equipo al mismo tiempo
  * y muestra cuántas se aprobaron. Lo esperado: 1 aprobada (201) y las
  * demás rechazadas (409), todas en menos de 2 segundos.
- *
- * Uso, con XAMPP encendido y desde la carpeta del proyecto:
- *   C:\xampp\php\php.exe docs\evidencias\concurrencia.php ID_USUARIO ID_EQUIPO [CANTIDAD]
- * Ejemplo:
- *   C:\xampp\php\php.exe docs\evidencias\concurrencia.php 1 1 10
- *
- * El equipo debe estar disponible antes de correrlo.
  */
 declare(strict_types=1);
 
