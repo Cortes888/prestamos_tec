@@ -4,7 +4,7 @@
 Sistema para la digitalización y administración del préstamo de apoyo tecnológico de la universidad (Bloque 1, Piso 3). Reemplaza el registro en papel para eliminar errores de diligenciamiento, mejorar la trazabilidad y optimizar el control del inventario.
 
 ## Integrantes
-- Santiago Cortes
+- Santiago Cortes (backend, API REST y repositorio)
 - Juan David Ospina
 - Samuel Silva
 
