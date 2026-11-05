@@ -1,11 +1,5 @@
 <?php
-/**
- * Evidencia del escenario de confiabilidad (ADR-003).
- *
- * Envía varias solicitudes de préstamo del MISMO equipo al mismo tiempo
- * y muestra cuántas se aprobaron. Lo esperado: 1 aprobada (201) y las
- * demás rechazadas (409), todas en menos de 2 segundos.
- */
+// Prueba de confiabilidad (ADR-003): manda varios préstamos del mismo equipo al mismo tiempo.
 declare(strict_types=1);
 
 $idUsuario = (int) ($argv[1] ?? 0);
@@ -31,7 +25,7 @@ for ($i = 1; $i <= $cantidad; $i++) {
     $peticiones[$i] = $c;
 }
 
-// Las envía todas a la vez.
+// Las manda todas a la vez
 do {
     curl_multi_exec($multi, $activas);
     curl_multi_select($multi);
