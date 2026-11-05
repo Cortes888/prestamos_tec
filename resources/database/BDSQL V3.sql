@@ -50,12 +50,9 @@ CREATE TABLE prestamo (
     fecha_devolucion_real     DATETIME,
     estado                    ENUM('activo','devuelto','vencido','perdido') NOT NULL DEFAULT 'activo',
     observaciones             TEXT,
-    -- ADR-003: vale id_objeto mientras el préstamo está abierto y NULL cuando se cierra.
-    -- Con el índice único de abajo, la base no acepta dos préstamos abiertos del mismo equipo.
-    -- Es VIRTUAL a propósito: id_objeto tiene borrado en cascada, y una columna STORED no lo permite.
+    -- Un solo préstamo abierto por equipo (ADR-003)
     objeto_en_prestamo        INT GENERATED ALWAYS AS (IF(estado IN ('activo', 'vencido'), id_objeto, NULL)) VIRTUAL,
     UNIQUE KEY uq_prestamo_abierto_por_objeto (objeto_en_prestamo),
-    -- Borrado en cascada, como en V2: al borrar un usuario o un equipo se borran sus préstamos.
     CONSTRAINT fk_prestamo_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
     CONSTRAINT fk_prestamo_objeto  FOREIGN KEY (id_objeto)  REFERENCES objeto(id_objeto)  ON DELETE CASCADE
 );
